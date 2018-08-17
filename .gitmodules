@@ -1,0 +1,3 @@
+[submodule "Captcha-Bot"]
+	path = captcha
+	url = https://github.com/indestinee/Captcha-Bot

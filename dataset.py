@@ -12,6 +12,35 @@ import sys
 from PIL import Image
 import numpy as np
 
+import sys
+sys.path.append('captcha')
+from generator import Generator
+
+class myDataset(Dataset):
+    def __init__(self, nSamples=1024, transform=None, target_transform=None):
+        self.transform = transform
+        self.target_transform = target_transform
+        self.nSamples = nSamples
+        self.generator = Generator()
+
+    def __len__(self):
+        return self.nSamples
+
+    def __getitem__(self, index):
+        img, label = self.generator.generate(augmentation=True, string=True)
+        if self.transform:
+            img = self.transform(img)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return img, label
+
+if __name__ == '__main__':
+    mds = myDataset()
+    print(len(mds))
+    for each in mds:
+        print(each)
+        break
+
 
 class lmdbDataset(Dataset):
 
