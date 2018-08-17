@@ -13,27 +13,27 @@ import utils
 import dataset
 
 from captcha.config import cfg
+from IPython import embed
 
 import models.crnn as crnn
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
+parser.add_argument('--workers', type=int, help='number of data loading workers', default=1)
 parser.add_argument('--batchSize', type=int, default=64, help='input batch size')
 parser.add_argument('--imgH', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--niter', type=int, default=25, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
+parser.add_argument('--niter', type=int, default=1000, help='number of epochs to train for')
+parser.add_argument('--lr', type=float, default=0.001, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
-parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
+parser.add_argument('--crnn', default='./data/crnn.pth', help="path to crnn (to continue training)")
 parser.add_argument('--alphabet', type=str, default=cfg.labels)
 parser.add_argument('--experiment', default=None, help='Where to store samples and models')
-parser.add_argument('--displayInterval', type=int, default=500, help='Interval to be displayed')
+parser.add_argument('--displayInterval', type=int, default=20, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
-parser.add_argument('--valInterval', type=int, default=500, help='Interval to be displayed')
-parser.add_argument('--saveInterval', type=int, default=500, help='Interval to be displayed')
+parser.add_argument('--valInterval', type=int, default=20, help='Interval to be displayed')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
@@ -153,11 +153,11 @@ def val(net, dataset, criterion, max_iter=100):
         loss_avg.add(cost)
 
         _, preds = preds.max(2)
-        preds = preds.squeeze(2)
+        preds = preds.squeeze()
         preds = preds.transpose(1, 0).contiguous().view(-1)
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
         for pred, target in zip(sim_preds, cpu_texts):
-            if pred == target.lower():
+            if pred.lower() == target.lower():
                 n_correct += 1
 
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
@@ -199,14 +199,11 @@ for epoch in range(opt.niter):
         i += 1
 
         if i % opt.displayInterval == 0:
-            print('[%d/%d][%d/%d] Loss: %f' %
-                  (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
+            print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
             loss_avg.reset()
 
         if i % opt.valInterval == 0:
             val(crnn, test_dataset, criterion)
 
-        # do checkpointing
-        if i % opt.saveInterval == 0:
-            torch.save(
-                crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+    if epoch % 5 == 0:
+        torch.save(crnn.state_dict(), '{0}/netCRNN_{1}.pth'.format(opt.experiment, epoch))
