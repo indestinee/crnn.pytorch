@@ -12,7 +12,7 @@ import os
 import utils
 import dataset
 
-from capcha.config import cfg
+from captcha.config import cfg
 
 import models.crnn as crnn
 
@@ -64,14 +64,14 @@ else:
     sampler = None
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=opt.batchSize,
-    shuffle=True, sampler=sampler,
+    shuffle=False, sampler=sampler,
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 test_dataset = dataset.myDataset(
     256, transform=dataset.resizeNormalize((100, 32)))
 
 nclass = len(opt.alphabet) + 1
-nc = 1
+nc = 3
 
 converter = utils.strLabelConverter(opt.alphabet)
 criterion = CTCLoss()

@@ -10,6 +10,7 @@ import lmdb
 import six
 import sys
 from PIL import Image
+import cv2
 import numpy as np
 
 import sys
@@ -97,13 +98,12 @@ class lmdbDataset(Dataset):
 
 class resizeNormalize(object):
 
-    def __init__(self, size, interpolation=Image.BILINEAR):
+    def __init__(self, size):
         self.size = size
-        self.interpolation = interpolation
         self.toTensor = transforms.ToTensor()
 
     def __call__(self, img):
-        img = img.resize(self.size, self.interpolation)
+        img = cv2.resize(img, self.size)
         img = self.toTensor(img)
         img.sub_(0.5).div_(0.5)
         return img
@@ -151,7 +151,7 @@ class alignCollate(object):
         if self.keep_ratio:
             ratios = []
             for image in images:
-                w, h = image.size
+                w, h = image.shape[:2]
                 ratios.append(w / float(h))
             ratios.sort()
             max_ratio = ratios[-1]
