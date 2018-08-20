@@ -205,5 +205,5 @@ for epoch in range(opt.niter):
         if i % opt.valInterval == 0:
             val(crnn, test_dataset, criterion)
 
-    if epoch % 5 == 0:
+    if epoch % 10 == 0:
         torch.save(crnn.state_dict(), '{0}/netCRNN_{1}.pth'.format(opt.experiment, epoch))

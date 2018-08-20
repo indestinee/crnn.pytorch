@@ -33,7 +33,7 @@ class CRNN(nn.Module):
 
         cnn = nn.Sequential()
 
-        def convRelu(i, batchNormalization=False):
+        def convRelu(i, batchNormalization=True):
             nIn = nc if i == 0 else nm[i - 1]
             nOut = nm[i]
             cnn.add_module('conv{0}'.format(i),
